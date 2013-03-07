@@ -32,21 +32,27 @@ def resize(filename, new_width=None, new_height=None, resize_filter=None, copy=F
     # Open the file
     user_image = Image.open(filename)
 
+    # Grab the original filename
+    original_filename = filename
+
     # Grab current image width and height
     current_width = user_image.size[0]
     current_height = user_image.size[1]
 
     # If values are not provided for either height or width, resize on the other dimension to maintain aspect ratio
     if new_height and not new_width:
-        ratio = new_height / current_height
+        ratio = float(new_height) / current_height
         new_width = current_width * ratio
+        new_width = int(new_width)
     elif new_width and not new_height:
-        ratio = new_width / current_width
+        ratio = float(new_width) / current_width
         new_height = current_height * ratio
+        new_height = int(new_height)
     elif not new_height and not new_width:
-        print 'Please specify a new height, a new width, or both'
+        print 'Please specify a new height, a new width, or both.'
 
-    # Set filter to ANTIALIAS if the image is getting smaller on both dimensions. Use BICUBIC for high-quality upscaling otherwise.
+    # Set filter to ANTIALIAS if the image is getting smaller on both dimensions. Use BICUBIC for high-quality upscaling
+    # otherwise.
     if new_width < current_width and new_height < current_height and not resize_filter:
         resize_filter = Image.ANTIALIAS
     elif not resize_filter:
@@ -57,12 +63,16 @@ def resize(filename, new_width=None, new_height=None, resize_filter=None, copy=F
         file_and_path, extension = os.path.splitext(filename)
         filename = '%s-%ix%i%s' % (file_and_path, new_width, new_height, extension)
 
-    user_image.resize((new_width, new_height), resize_filter)
-    user_image.save(filename)
+    if new_width == current_width and new_height == current_height:
+        print 'Image dimensions did not change for %s' % original_filename
+    else:
+        user_image = user_image.resize((new_width, new_height), resize_filter)
+        user_image.save(filename)
 
 def main():
     """
-    Determines if the argument is a file or a directory. If file, runs resize. If directory, runs resize on each file in directory.
+    Determines if the argument is a file or a directory. If file, runs resize. If directory, runs resize on each file in
+    directory.
     """
     if not args.filepath:
         print('Please supply a file or directory path.')
