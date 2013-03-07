@@ -5,6 +5,10 @@ import Image, argparse, os
 parser = argparse.ArgumentParser(description='Resizes an image or several images to the desired size.', add_help=False)
 parser.add_argument('filepath',
     help='Provide the path of the file or directory for image resizing.')
+parser.add_argument('-c', '--copy',
+    help='(Optional) Store a copy of the resized image rather than overwriting the original. The copy will have its \
+         dimensions appended to the file name.',
+    dest='copy', action='store_true', default=False)
 parser.add_argument('-f', '--filter',
     help='(Optional) Specify a filter for resizing. Options are NEAREST, BILINEAR, BICUBIC, or ANTIALIAS.',
     dest='user_filter', action='store', metavar='filter', default=None,
@@ -20,7 +24,7 @@ args = parser.parse_args()
 
 filters = {'NEAREST': Image.NEAREST, 'BILINEAR': Image.BILINEAR, 'BICUBIC': Image.BICUBIC, 'ANTIALIAS': Image.ANTIALIAS}
 
-def resize(filename, new_width=None, new_height=None, resize_filter=None):
+def resize(filename, new_width=None, new_height=None, resize_filter=None, copy=False):
     '''
     Function for resizing an image. Takes the filename and optional width and height arguments.
     '''
@@ -48,6 +52,11 @@ def resize(filename, new_width=None, new_height=None, resize_filter=None):
     elif not resize_filter:
         resize_filter = Image.BICUBIC
 
+    if copy:
+        # Build a new filename
+        file_and_path, extension = os.path.splitext(filename)
+        filename = '%s-%ix%i%s' % (file_and_path, new_width, new_height, extension)
+
     user_image.resize((new_width, new_height), resize_filter)
     user_image.save(filename)
 
@@ -59,12 +68,12 @@ def main():
         print('Please supply a file or directory path.')
         return
     if os.path.isfile(args.filepath):
-        resize(args.filepath, args.user_width, args.user_height, args.user_filter)
+        resize(args.filepath, args.user_width, args.user_height, args.user_filter, args.copy)
     elif os.path.isdir(args.filepath):
         for f in os.listdir(args.filepath):
             filepath = os.path.join(args.filepath, f)
             if os.path.isfile(filepath):
-                     resize(filepath, args.user_width, args.user_height, args.user_filter)
+                     resize(filepath, args.user_width, args.user_height, args.user_filter, args.copy)
 
 if __name__=="__main__":
     main()
